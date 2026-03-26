@@ -1,562 +1,103 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Monitor de Momentum Bitcoin</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<style>
-  :root {
-    --bg: #0f0f13;
-    --bg2: #16161d;
-    --bg3: #1e1e28;
-    --border: rgba(255,255,255,0.08);
-    --text: #f0f0f0;
-    --muted: #888;
-    --green: #1db97a;
-    --amber: #f0a500;
-    --red: #e04a4a;
-    --blue: #4a9eff;
-    --gold: #f0c040;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
 
-  .topbar { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
-  .topbar-title { font-size: 16px; font-weight: 600; letter-spacing: -0.3px; }
-  .topbar-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
-  .topbar-right { display: flex; align-items: center; gap: 10px; }
-  #lastUpdate { font-size: 11px; color: var(--muted); }
-  .refresh-btn { background: transparent; border: 1px solid var(--border); color: var(--muted); font-size: 11px; padding: 4px 10px; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
-  .refresh-btn:hover { border-color: var(--blue); color: var(--blue); }
+Cargando datos del mercado...
+Monitor de Momentum Bitcoin
+Indicadores macro · Liquidez · Catalizadores regulatorios
 
-  .main { max-width: 1100px; margin: 0 auto; padding: 20px 16px; }
+↺ Actualizar
+INDICADORES MACRO EN TIEMPO REAL (SEÑALES DE RAUL PAL)
+Bitcoin (BTC/USD)
+—
+cargando...
+Market cap: —
 
-  .section-label { font-size: 10px; font-weight: 600; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; }
+Oro (XAU/USD)
+—
+cargando...
+Pico ene 2026: $5,414
 
-  .grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; margin-bottom: 14px; }
-  .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin-bottom: 14px; }
-  .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; margin-bottom: 14px; }
-  @media (max-width: 768px) {
-    .grid-4 { grid-template-columns: repeat(2, 1fr); }
-    .grid-2 { grid-template-columns: 1fr; }
-    .grid-3 { grid-template-columns: 1fr; }
-  }
-  @media (max-width: 480px) {
-    .grid-4 { grid-template-columns: 1fr 1fr; }
-  }
+Ethereum (ETH/USD)
+—
+cargando...
+Referencia liquidez cripto
 
-  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
-  .metric-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; transition: border-color 0.2s; }
-  .metric-card:hover { border-color: rgba(255,255,255,0.18); }
+Fear & Greed Index
+—
+cargando...
+0 = Miedo extremo · 100 = Codicia
 
-  .m-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
-  .m-value { font-size: 22px; font-weight: 600; line-height: 1.1; }
-  .m-sub { font-size: 11px; margin-top: 3px; }
-  .m-sub2 { font-size: 10px; color: var(--muted); margin-top: 2px; }
-  .up { color: var(--green); }
-  .down { color: var(--red); }
-  .neutral { color: var(--muted); }
-  .warn { color: var(--amber); }
+Puntuación de momentum
+—
+de 100
 
-  .bar { background: rgba(255,255,255,0.06); border-radius: 3px; height: 5px; margin-top: 8px; overflow: hidden; }
-  .bar-fill { height: 100%; border-radius: 3px; transition: width 1s ease; }
 
-  .badge { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 4px; }
-  .b-green { background: rgba(29,185,122,0.15); color: var(--green); }
-  .b-amber { background: rgba(240,165,0,0.15); color: var(--amber); }
-  .b-red { background: rgba(224,74,74,0.15); color: var(--red); }
-  .b-blue { background: rgba(74,158,255,0.15); color: var(--blue); }
-  .b-gray { background: rgba(136,136,136,0.15); color: var(--muted); }
+Dólar (DXY)
+Débil → Bullish
 
-  h2 { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 12px; }
+Oro
+Récord histórico
 
-  .signal-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border); }
-  .signal-row:last-child { border-bottom: none; }
-  .signal-name { font-size: 12px; display: flex; align-items: center; gap: 7px; }
-  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .d-green { background: var(--green); }
-  .d-amber { background: var(--amber); }
-  .d-red { background: var(--red); }
-  .d-gray { background: var(--muted); }
+Fear & Greed
+—
 
-  .score-num { font-size: 52px; font-weight: 700; text-align: center; line-height: 1; }
-  .score-sub { font-size: 12px; color: var(--muted); text-align: center; margin-top: 4px; }
+Fed (tasas)
+3.50–3.75% sin recorte
 
-  .event-row { display: flex; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); align-items: flex-start; }
-  .event-row:last-child { border-bottom: none; }
-  .event-icon { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; margin-top: 1px; }
-  .event-title { font-size: 12px; font-weight: 600; color: var(--text); }
-  .event-desc { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.5; }
+SEC + CFTC
+Marco legal aprobado
 
-  .chart-wrap { position: relative; width: 100%; height: 180px; }
-  .chart-wrap-sm { position: relative; width: 100%; height: 150px; }
+Conflicto Irán
+Negociaciones en curso
+Precio BTC — últimos 30 días
 
-  .summary-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; }
-  .summary-box { padding: 10px 12px; border-radius: 8px; }
-  .summary-box .s-title { font-size: 11px; font-weight: 600; margin-bottom: 5px; }
-  .summary-box .s-body { font-size: 11px; line-height: 1.6; }
-  .s-green { background: rgba(29,185,122,0.08); }
-  .s-green .s-title, .s-green .s-body { color: var(--green); }
-  .s-amber { background: rgba(240,165,0,0.08); }
-  .s-amber .s-title, .s-amber .s-body { color: var(--amber); }
-  .s-red { background: rgba(224,74,74,0.08); }
-  .s-red .s-title, .s-red .s-body { color: var(--red); }
 
-  .alert-box { background: rgba(240,165,0,0.06); border: 1px solid rgba(240,165,0,0.2); border-radius: 8px; padding: 10px 12px; margin-top: 10px; font-size: 12px; color: var(--amber); line-height: 1.5; }
+BTC/USD
 
-  .loading-overlay { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; z-index: 100; transition: opacity 0.4s; }
-  .loading-overlay.hidden { opacity: 0; pointer-events: none; }
-  .spinner { width: 32px; height: 32px; border: 2px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.8s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .loading-text { font-size: 13px; color: var(--muted); }
+Soporte $70K
 
-  .error-badge { background: rgba(224,74,74,0.12); border: 1px solid rgba(224,74,74,0.25); color: var(--red); font-size: 11px; padding: 3px 8px; border-radius: 4px; display: none; }
-</style>
-</head>
-<body>
+Catalizadores regulatorios
+✓
+SEC + CFTC — marco legal aprobado
+18 mar 2026: mayoría de activos crypto no son valores. Primer marco legal claro para adopción institucional.
+Bullish — nuevo
+📋
+Clarity Act — en debate
+Riesgo: podría favorecer incumbentes financieros sobre proyectos descentralizados (analogía telecomunicaciones años 90).
+Vigilar — riesgo medio
+🇺🇸
+Reserva estratégica BTC de EE.UU.
+Cathie Wood: Trump comprará BTC activamente en 2026 por incentivos políticos (midterms). Actualmente solo tiene BTC confiscado (~200K BTC).
+Pendiente — catalizador potente
+💰
+Stablecoins en circuito financiero
+Volumen global: $700B → $1.8T en 12 meses. Los bancos empiezan a integrarlas. Conecta crypto con sistema financiero tradicional.
+Estructural — largo plazo
+Riesgos activos
+⚠
+Conflicto Irán — activo
+Trump anuncia negociaciones, Irán lo niega. BTC cayó a $68K al inicio del conflicto, rebotó +5% con pausa militar. Alta volatilidad a corto plazo.
+Escalada → fuga a oro
+Paz → rotación a BTC
+🏦
+Fed hawkish — inflación persistente
+Powell (18 mar): inflación no baja tan rápido como se esperaba. Solo 1 recorte proyectado en todo 2026. Presiona activos de riesgo a la baja.
+Freno temporal
+🏛
+Acumulación institucional continúa
+Ballenas compraron ~8,400 BTC tras última caída. Standard Chartered mantiene objetivo de $150K para fin de 2026. ETFs siguen con flujos positivos.
+Soporte estructural
+📊
+Resistencia técnica clave
+Resistencia: $71,500–$72,000. Soporte crítico: $70,000. BTC bajo 200-day EMA. Ruptura sobre $74K con volumen = primera señal de momentum alcista.
+Técnico — neutral
+Ratio BTC vs Oro — la brecha que define el momentum
 
-<div class="loading-overlay" id="loader">
-  <div class="spinner"></div>
-  <div class="loading-text">Cargando datos del mercado...</div>
-</div>
-
-<div class="topbar">
-  <div>
-    <div class="topbar-title">Monitor de Momentum Bitcoin</div>
-    <div class="topbar-sub">Indicadores macro · Liquidez · Catalizadores regulatorios</div>
-  </div>
-  <div class="topbar-right">
-    <span class="error-badge" id="errorBadge">Error de datos — usando valores de referencia</span>
-    <span id="lastUpdate" style="font-size:11px; color:var(--muted);"></span>
-    <button class="refresh-btn" onclick="loadData()">↺ Actualizar</button>
-  </div>
-</div>
-
-<div class="main">
-
-  <div class="section-label" style="margin-top:4px;">Indicadores macro en tiempo real (señales de Raul Pal)</div>
-  <div class="grid-4" id="metricsGrid">
-    <div class="metric-card">
-      <div class="m-label">Bitcoin (BTC/USD)</div>
-      <div class="m-value" id="btcPrice">—</div>
-      <div class="m-sub" id="btcChange">cargando...</div>
-      <div class="m-sub2" id="btcNote">Market cap: —</div>
-      <div class="bar"><div class="bar-fill" id="btcBar" style="width:0%; background: var(--blue);"></div></div>
-    </div>
-    <div class="metric-card">
-      <div class="m-label">Oro (XAU/USD)</div>
-      <div class="m-value" id="goldPrice">—</div>
-      <div class="m-sub" id="goldChange">cargando...</div>
-      <div class="m-sub2" id="goldNote">vs año anterior: —</div>
-      <div class="bar"><div class="bar-fill" id="goldBar" style="width:0%; background: var(--gold);"></div></div>
-    </div>
-    <div class="metric-card">
-      <div class="m-label">Ethereum (ETH/USD)</div>
-      <div class="m-value" id="ethPrice">—</div>
-      <div class="m-sub" id="ethChange">cargando...</div>
-      <div class="m-sub2">Referencia liquidez cripto</div>
-      <div class="bar"><div class="bar-fill" id="ethBar" style="width:0%; background: #a06fe0;"></div></div>
-    </div>
-    <div class="metric-card">
-      <div class="m-label">Fear &amp; Greed Index</div>
-      <div class="m-value" id="fgValue">—</div>
-      <div class="m-sub" id="fgLabel">cargando...</div>
-      <div class="m-sub2">0 = Miedo extremo · 100 = Codicia</div>
-      <div class="bar"><div class="bar-fill" id="fgBar" style="width:0%;"></div></div>
-    </div>
-  </div>
-
-  <div class="grid-2">
-    <div class="card">
-      <h2>Puntuación de momentum</h2>
-      <div style="display:flex; align-items:center; gap:16px;">
-        <div style="min-width:100px;">
-          <div class="score-num" id="scoreVal" style="color: var(--amber);">—</div>
-          <div class="score-sub">de 100</div>
-          <div style="margin-top:8px; text-align:center;" id="scoreBadge"></div>
-        </div>
-        <div style="flex:1;">
-          <div class="signal-row">
-            <div class="signal-name"><span class="dot d-green"></span>Dólar (DXY)</div>
-            <span class="badge b-green">Débil → Bullish</span>
-          </div>
-          <div class="signal-row">
-            <div class="signal-name"><span class="dot d-green"></span>Oro</div>
-            <span class="badge b-green">Récord histórico</span>
-          </div>
-          <div class="signal-row">
-            <div class="signal-name"><span class="dot" id="fgDot" style="background:var(--muted);"></span>Fear &amp; Greed</div>
-            <span class="badge b-red" id="fgBadge">—</span>
-          </div>
-          <div class="signal-row">
-            <div class="signal-name"><span class="dot d-amber"></span>Fed (tasas)</div>
-            <span class="badge b-amber">3.50–3.75% sin recorte</span>
-          </div>
-          <div class="signal-row">
-            <div class="signal-name"><span class="dot d-green"></span>SEC + CFTC</div>
-            <span class="badge b-green">Marco legal aprobado</span>
-          </div>
-          <div class="signal-row">
-            <div class="signal-name"><span class="dot d-red"></span>Conflicto Irán</div>
-            <span class="badge b-amber">Negociaciones en curso</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>Precio BTC — últimos 30 días</h2>
-      <div class="chart-wrap"><canvas id="chartBTC"></canvas></div>
-      <div style="display:flex; gap:14px; margin-top:8px; font-size:11px; color:var(--muted);">
-        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:2px;background:var(--blue);display:inline-block;border-radius:1px;"></span>BTC/USD</span>
-        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:2px;background:rgba(240,165,0,0.5);display:inline-block;border-radius:1px; border-top: 2px dashed var(--amber);"></span>Soporte $70K</span>
-        <span id="btcChartNote" style="margin-left:auto; font-size:10px;"></span>
-      </div>
-    </div>
-  </div>
-
-  <div class="grid-2">
-    <div class="card">
-      <h2>Catalizadores regulatorios</h2>
-      <div class="event-row">
-        <div class="event-icon" style="background:rgba(29,185,122,0.1);">✓</div>
-        <div>
-          <div class="event-title">SEC + CFTC — marco legal aprobado</div>
-          <div class="event-desc">18 mar 2026: mayoría de activos crypto no son valores. Primer marco legal claro para adopción institucional.</div>
-          <div style="margin-top:4px;"><span class="badge b-green">Bullish — nuevo</span></div>
-        </div>
-      </div>
-      <div class="event-row">
-        <div class="event-icon" style="background:rgba(74,158,255,0.1);">📋</div>
-        <div>
-          <div class="event-title">Clarity Act — en debate</div>
-          <div class="event-desc">Riesgo: podría favorecer incumbentes financieros sobre proyectos descentralizados (analogía telecomunicaciones años 90).</div>
-          <div style="margin-top:4px;"><span class="badge b-amber">Vigilar — riesgo medio</span></div>
-        </div>
-      </div>
-      <div class="event-row">
-        <div class="event-icon" style="background:rgba(29,185,122,0.1);">🇺🇸</div>
-        <div>
-          <div class="event-title">Reserva estratégica BTC de EE.UU.</div>
-          <div class="event-desc">Cathie Wood: Trump comprará BTC activamente en 2026 por incentivos políticos (midterms). Actualmente solo tiene BTC confiscado (~200K BTC).</div>
-          <div style="margin-top:4px;"><span class="badge b-blue">Pendiente — catalizador potente</span></div>
-        </div>
-      </div>
-      <div class="event-row">
-        <div class="event-icon" style="background:rgba(240,165,0,0.1);">💰</div>
-        <div>
-          <div class="event-title">Stablecoins en circuito financiero</div>
-          <div class="event-desc">Volumen global: $700B → $1.8T en 12 meses. Los bancos empiezan a integrarlas. Conecta crypto con sistema financiero tradicional.</div>
-          <div style="margin-top:4px;"><span class="badge b-blue">Estructural — largo plazo</span></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>Riesgos activos</h2>
-      <div class="event-row">
-        <div class="event-icon" style="background:rgba(224,74,74,0.1);">⚠</div>
-        <div>
-          <div class="event-title">Conflicto Irán — activo</div>
-          <div class="event-desc">Trump anuncia negociaciones, Irán lo niega. BTC cayó a $68K al inicio del conflicto, rebotó +5% con pausa militar. Alta volatilidad a corto plazo.</div>
-          <div style="margin-top:4px; display:flex; gap:4px; flex-wrap:wrap;">
-            <span class="badge b-red">Escalada → fuga a oro</span>
-            <span class="badge b-green">Paz → rotación a BTC</span>
-          </div>
-        </div>
-      </div>
-      <div class="event-row">
-        <div class="event-icon" style="background:rgba(240,165,0,0.1);">🏦</div>
-        <div>
-          <div class="event-title">Fed hawkish — inflación persistente</div>
-          <div class="event-desc">Powell (18 mar): inflación no baja tan rápido como se esperaba. Solo 1 recorte proyectado en todo 2026. Presiona activos de riesgo a la baja.</div>
-          <div style="margin-top:4px;"><span class="badge b-amber">Freno temporal</span></div>
-        </div>
-      </div>
-      <div class="event-row">
-        <div class="event-icon" style="background:rgba(29,185,122,0.1);">🏛</div>
-        <div>
-          <div class="event-title">Acumulación institucional continúa</div>
-          <div class="event-desc">Ballenas compraron ~8,400 BTC tras última caída. Standard Chartered mantiene objetivo de $150K para fin de 2026. ETFs siguen con flujos positivos.</div>
-          <div style="margin-top:4px;"><span class="badge b-green">Soporte estructural</span></div>
-        </div>
-      </div>
-      <div class="event-row">
-        <div class="event-icon" style="background:rgba(136,136,136,0.1);">📊</div>
-        <div>
-          <div class="event-title">Resistencia técnica clave</div>
-          <div class="event-desc">Resistencia: $71,500–$72,000. Soporte crítico: $70,000. BTC bajo 200-day EMA. Ruptura sobre $74K con volumen = primera señal de momentum alcista.</div>
-          <div style="margin-top:4px;"><span class="badge b-gray">Técnico — neutral</span></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card" style="margin-bottom:14px;">
-    <h2>Ratio BTC vs Oro — la brecha que define el momentum</h2>
-    <div class="chart-wrap-sm"><canvas id="chartRatio"></canvas></div>
-    <div style="font-size:11px; color:var(--muted); margin-top:8px;">Oro +52% desde oct 2025 (pico $5,414 en enero 2026, hoy ~$4,565). BTC -18% desde máximo oct 2025 (~$87,500). La brecha históricamente precede un rally explosivo de BTC — patrón idéntico al de 2020.</div>
-  </div>
-
-  <div class="card" style="margin-bottom:14px;">
-    <h2>Mecanismo de transmisión — resumen ejecutivo</h2>
-    <div class="summary-grid">
-      <div class="summary-box s-green">
-        <div class="s-title">Señales positivas</div>
-        <div class="s-body">Dólar débil · Oro en récord · Acumulación ballenas · Marco SEC/CFTC aprobado · Stablecoins creciendo · Liquidez Fed $40B/mes</div>
-      </div>
-      <div class="summary-box s-amber">
-        <div class="s-title">Señales de espera</div>
-        <div class="s-body">Fed sin recorte · Fear &amp; Greed en zona miedo · BTC bajo 200-day EMA · Clarity Act en debate · Inflación persistente</div>
-      </div>
-      <div class="summary-box s-red">
-        <div class="s-title">Riesgos activos</div>
-        <div class="s-body">Conflicto Irán en curso · Regulación pro-incumbentes · Soporte $70K en prueba · Hawkishness Fed más de lo esperado</div>
-      </div>
-    </div>
-    <div class="alert-box" id="alertBox">
-      Indicador clave esta semana: comportamiento del soporte $70,000 · novedades Clarity Act · resolución conflicto Irán. Ruptura sobre $72,000–$74,000 con volumen = primera confirmación de momentum alcista.
-    </div>
-  </div>
-
-  <div style="font-size:11px; color:var(--muted); text-align:center; padding: 16px 0 8px;">
-    Datos: CoinGecko API (BTC/ETH) · Alternative.me (Fear &amp; Greed) · Valores de referencia para oro/DXY · Actualización diaria automática
-  </div>
-
-</div>
-
-<script>
-let btcChart = null;
-let ratioChart = null;
-
-const FALLBACK = {
-  btc: { price: 71300, change24h: 0.36, marketCap: 1330000000000 },
-  eth: { price: 1920, change24h: 1.2 },
-  gold: { price: 4565, changeYear: 51.3 },
-  fg: { value: 25, label: 'Miedo' }
-};
-
-function fmt(n, dec=0) {
-  return n.toLocaleString('es-PE', { minimumFractionDigits: dec, maximumFractionDigits: dec });
-}
-function fmtUSD(n) {
-  if (n >= 1e12) return '$' + (n/1e12).toFixed(2) + 'T';
-  if (n >= 1e9)  return '$' + (n/1e9).toFixed(0) + 'B';
-  return '$' + fmt(n);
-}
-
-function getScoreColor(s) {
-  if (s >= 65) return 'var(--green)';
-  if (s >= 40) return 'var(--amber)';
-  return 'var(--red)';
-}
-function getScoreLabel(s) {
-  if (s >= 75) return '<span class="badge b-green">Rally activo</span>';
-  if (s >= 55) return '<span class="badge b-blue">Acumulación fuerte</span>';
-  if (s >= 40) return '<span class="badge b-amber">Zona de acumulación</span>';
-  if (s >= 25) return '<span class="badge b-red">Miedo — posible suelo</span>';
-  return '<span class="badge b-red">Miedo extremo</span>';
-}
-
-function calcScore(fg, btcChange) {
-  let score = 35;
-  // Dólar débil: +10
-  score += 10;
-  // Oro en récord: +10
-  score += 10;
-  // Fear & Greed
-  if (fg >= 60) score += 15;
-  else if (fg >= 40) score += 8;
-  else if (fg >= 20) score += 2;
-  else score -= 5;
-  // BTC momentum
-  if (btcChange > 3) score += 8;
-  else if (btcChange > 0) score += 4;
-  else if (btcChange > -3) score += 0;
-  else score -= 5;
-  // Fed hawkish: -8
-  score -= 8;
-  // Geopolítica: -5
-  score -= 5;
-  return Math.max(5, Math.min(95, Math.round(score)));
-}
-
-function renderMetrics(btc, eth, gold, fg) {
-  // BTC
-  const btcSign = btc.change24h >= 0 ? '▲' : '▼';
-  const btcClass = btc.change24h >= 0 ? 'up' : 'down';
-  document.getElementById('btcPrice').textContent = '$' + fmt(btc.price);
-  document.getElementById('btcPrice').style.color = btc.change24h >= 0 ? 'var(--green)' : 'var(--red)';
-  document.getElementById('btcChange').innerHTML = `<span class="${btcClass}">${btcSign} ${Math.abs(btc.change24h).toFixed(2)}% hoy</span>`;
-  document.getElementById('btcNote').textContent = 'Market cap: ' + fmtUSD(btc.marketCap);
-  document.getElementById('btcBar').style.width = Math.min(95, Math.max(5, (btc.price / 90000) * 100)) + '%';
-
-  // ETH
-  const ethSign = eth.change24h >= 0 ? '▲' : '▼';
-  const ethClass = eth.change24h >= 0 ? 'up' : 'down';
-  document.getElementById('ethPrice').textContent = '$' + fmt(eth.price);
-  document.getElementById('ethPrice').style.color = eth.change24h >= 0 ? 'var(--green)' : 'var(--red)';
-  document.getElementById('ethChange').innerHTML = `<span class="${ethClass}">${ethSign} ${Math.abs(eth.change24h).toFixed(2)}% hoy</span>`;
-  document.getElementById('ethBar').style.width = Math.min(95, Math.max(5, (eth.price / 5000) * 100)) + '%';
-
-  // Gold
-  document.getElementById('goldPrice').textContent = '$' + fmt(gold.price);
-  document.getElementById('goldPrice').style.color = 'var(--gold)';
-  document.getElementById('goldChange').innerHTML = `<span class="up">▲ Récord histórico 2026</span>`;
-  document.getElementById('goldNote').textContent = 'Pico ene 2026: $5,414 | Hoy: -' + ((5414 - gold.price)/5414*100).toFixed(1) + '% desde máx';
-  document.getElementById('goldBar').style.width = Math.min(95, (gold.price / 5500) * 100) + '%';
-
-  // Fear & Greed
-  const fgColors = { 0: 'var(--red)', 25: 'var(--amber)', 50: 'var(--blue)', 75: 'var(--green)' };
-  let fgColor = fg.value < 25 ? 'var(--red)' : fg.value < 45 ? 'var(--amber)' : fg.value < 65 ? 'var(--blue)' : 'var(--green)';
-  document.getElementById('fgValue').textContent = fg.value;
-  document.getElementById('fgValue').style.color = fgColor;
-  document.getElementById('fgLabel').innerHTML = `<span style="color:${fgColor}">${fg.label}</span>`;
-  document.getElementById('fgBar').style.width = fg.value + '%';
-  document.getElementById('fgBar').style.background = fgColor;
-  document.getElementById('fgBadge').textContent = fg.value + ' — ' + fg.label;
-
-  if (fg.value < 30) {
-    document.getElementById('fgDot').style.background = 'var(--red)';
-    document.getElementById('fgBadge').className = 'badge b-red';
-  } else if (fg.value < 55) {
-    document.getElementById('fgDot').style.background = 'var(--amber)';
-    document.getElementById('fgBadge').className = 'badge b-amber';
-  } else {
-    document.getElementById('fgDot').style.background = 'var(--green)';
-    document.getElementById('fgBadge').className = 'badge b-green';
-  }
-
-  // Score
-  const score = calcScore(fg.value, btc.change24h);
-  document.getElementById('scoreVal').textContent = score;
-  document.getElementById('scoreVal').style.color = getScoreColor(score);
-  document.getElementById('scoreBadge').innerHTML = getScoreLabel(score);
-}
-
-function renderBTCChart(prices, labels) {
-  const ctx = document.getElementById('chartBTC').getContext('2d');
-  if (btcChart) btcChart.destroy();
-  const support = new Array(labels.length).fill(70000);
-  btcChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [
-        {
-          label: 'BTC/USD',
-          data: prices,
-          borderColor: '#4a9eff',
-          backgroundColor: 'rgba(74,158,255,0.07)',
-          tension: 0.4, borderWidth: 2, pointRadius: 1, fill: true
-        },
-        {
-          label: 'Soporte $70K',
-          data: support,
-          borderColor: 'rgba(240,165,0,0.4)',
-          borderDash: [5,4], borderWidth: 1.5, pointRadius: 0, fill: false
-        }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { font: { size: 10 }, color: '#666', maxTicksLimit: 8 } },
-        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { font: { size: 10 }, color: '#666', callback: v => '$' + (v/1000).toFixed(0) + 'K' }, min: 64000, max: 90000 }
-      }
-    }
-  });
-}
-
-function renderRatioChart() {
-  const ctx = document.getElementById('chartRatio').getContext('2d');
-  if (ratioChart) ratioChart.destroy();
-  ratioChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: ['Oro oct 2025\n(base 100)', 'Oro ene 2026\n(pico)', 'Oro hoy', 'BTC oct 2025\n(base 100)', 'BTC hoy'],
-      datasets: [{
-        data: [100, 152, 129, 100, 82],
-        backgroundColor: ['rgba(240,192,64,0.5)','rgba(240,192,64,0.9)','rgba(240,192,64,0.7)','rgba(74,158,255,0.5)','rgba(74,158,255,0.8)'],
-        borderColor: ['#f0c040','#f0c040','#f0c040','#4a9eff','#4a9eff'],
-        borderWidth: 1, borderRadius: 5
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#666' } },
-        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { font: { size: 10 }, color: '#666', callback: v => v + ' (b100)' }, min: 60 }
-      }
-    }
-  });
-}
-
-async function loadData() {
-  document.getElementById('loader').classList.remove('hidden');
-  let btcData = {...FALLBACK.btc};
-  let ethData = {...FALLBACK.eth};
-  let fgData  = {...FALLBACK.fg};
-  let goldData = {...FALLBACK.gold};
-  let btcHistory = { prices: [], labels: [] };
-  let hasError = false;
-
-  try {
-    // BTC + ETH prices (CoinGecko free API)
-    const coinsRes = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true&include_market_cap=true', { signal: AbortSignal.timeout(8000) });
-    if (coinsRes.ok) {
-      const coins = await coinsRes.json();
-      btcData = { price: coins.bitcoin.usd, change24h: coins.bitcoin.usd_24h_change, marketCap: coins.bitcoin.usd_market_cap };
-      ethData = { price: coins.ethereum.usd, change24h: coins.ethereum.usd_24h_change };
-    } else { hasError = true; }
-  } catch(e) { hasError = true; }
-
-  try {
-    // Fear & Greed (alternative.me free API)
-    const fgRes = await fetch('https://api.alternative.me/fng/?limit=1', { signal: AbortSignal.timeout(8000) });
-    if (fgRes.ok) {
-      const fg = await fgRes.json();
-      fgData = { value: parseInt(fg.data[0].value), label: fg.data[0].value_classification };
-    } else { hasError = true; }
-  } catch(e) { hasError = true; }
-
-  try {
-    // BTC historical (CoinGecko free API - 30 days)
-    const histRes = await fetch('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=30&interval=daily', { signal: AbortSignal.timeout(10000) });
-    if (histRes.ok) {
-      const hist = await histRes.json();
-      btcHistory.prices = hist.prices.map(p => Math.round(p[1]));
-      btcHistory.labels = hist.prices.map(p => {
-        const d = new Date(p[0]);
-        return (d.getDate()) + '/' + (d.getMonth()+1);
-      });
-      document.getElementById('btcChartNote').textContent = '30 días · datos CoinGecko';
-    } else { hasError = true; }
-  } catch(e) {
-    hasError = true;
-    // Fallback historical data
-    btcHistory.labels = ['24/2','26/2','28/2','02/3','04/3','06/3','08/3','10/3','12/3','14/3','16/3','18/3','20/3','22/3','23/3','24/3','25/3'];
-    btcHistory.prices = [84000,82500,80000,78000,76000,74000,72000,70798,70500,70798,71500,72483,70416,68951,70599,71043,71300];
-    document.getElementById('btcChartNote').textContent = 'datos de referencia';
-  }
-
-  document.getElementById('errorBadge').style.display = hasError ? 'inline-block' : 'none';
-
-  renderMetrics(btcData, ethData, goldData, fgData);
-  renderBTCChart(btcHistory.prices, btcHistory.labels);
-  renderRatioChart();
-
-  const now = new Date();
-  document.getElementById('lastUpdate').textContent = 'Actualizado: ' + now.toLocaleDateString('es-PE', { day:'2-digit', month:'short', year:'numeric' }) + ' ' + now.toLocaleTimeString('es-PE', { hour:'2-digit', minute:'2-digit' });
-
-  setTimeout(() => document.getElementById('loader').classList.add('hidden'), 400);
-}
-
-// Auto-load on page open
-loadData();
-</script>
-</body>
-</html>
+Oro +52% desde oct 2025 (pico $5,414 en enero 2026, hoy ~$4,565). BTC -18% desde máximo oct 2025 (~$87,500). La brecha históricamente precede un rally explosivo de BTC — patrón idéntico al de 2020.
+Mecanismo de transmisión — resumen ejecutivo
+Señales positivas
+Dólar débil · Oro en récord · Acumulación ballenas · Marco SEC/CFTC aprobado · Stablecoins creciendo · Liquidez Fed $40B/mes
+Señales de espera
+Fed sin recorte · Fear & Greed en zona miedo · BTC bajo 200-day EMA · Clarity Act en debate · Inflación persistente
+Riesgos activos
+Conflicto Irán en curso · Regulación pro-incumbentes · Soporte $70K en prueba · Hawkishness Fed más de lo esperado
+Indicador clave esta semana: comportamiento del soporte $70,000 · novedades Clarity Act · resolución conflicto Irán. Ruptura sobre $72,000–$74,000 con volumen = primera confirmación de momentum alcista.
+Datos: CoinGecko API (BTC/ETH) · Alternative.me (Fear & Greed) · Yahoo Finance proxy (Oro/XAU) · Actualización automática al abrir
